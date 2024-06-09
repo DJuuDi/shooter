@@ -10,6 +10,9 @@ mixer.init()
 mixer.music.load('space.ogg')
 # mixer.music.play()
 mixer.music.set_volume(0.2)
+bullet_sound = mixer.Sound("fire.ogg")
+bullet_sound.set_volume(0.5)
+
 
 screen_info = display.Info()
 WIDTH, HEIGHT = screen_info.current_w, screen_info.current_h
@@ -24,6 +27,7 @@ bg_y1 = 0
 bg_y2 = -HEIGHT
 
 player_img = image.load("spaceship.png")
+bullet_img = image.load("lazer.png")
 enemy_img = image.load("alien.png")
 all_sprites = sprite.Group()
 
@@ -45,6 +49,11 @@ class Player(Sprite):
         self.bg_speed = 2
         self.max_speed = 30
 
+    def shoot(self):
+        new_bullet = Bullet(bullet_img, 10, 20, self.rect.left, self.rect.top)
+        new_bullet = Bullet(bullet_img, 10, 20, self.rect.right -10, self.rect.top)
+        bullet_sound.play()
+        
     def update(self):
         key_pressed = key.get_pressed()
         old_pos = self.rect.x, self.rect.y
@@ -64,7 +73,20 @@ class Player(Sprite):
         if len(enemy_collide) > 0:
             self.hp -= 100
 
+bullets = sprite.Group()
+class Bullet(Sprite):
+    def __init__(self, sprite_img, width, height, x, y):
+        super().__init__(sprite_img, width, height, x, y)
+        self.rect.centerx = x
+        self.rect.bottom = y
+        self.damage = 100
+        self.speed = 10  
+        enemys.add(self) 
 
+    def update(self):
+        self.rect.y -= self.speed
+        if self.rect.bottom < 0:
+            self.kill()
 
 class Enemy(Sprite):
     def __init__(self, sprite_img, width, height):
@@ -76,7 +98,6 @@ class Enemy(Sprite):
 
     def update(self):
         self.rect.y += player.bg_speed +2
-
         if self.rect.y > HEIGHT:
             self.kill()
 
@@ -96,6 +117,8 @@ while run:
         if e.type == KEYDOWN:
             if e.key == K_ESCAPE:
                 run = False
+            if e.key == K_SPACE:
+                player.shoot()
 
     window.blit(bg,(0,bg_y1))
     window.blit(bg,(0,bg_y2))
